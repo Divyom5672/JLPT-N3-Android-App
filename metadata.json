@@ -1,0 +1,6 @@
+{
+  "name": "JLPT N3 Flashcards",
+  "description": "Japanese Kanji & Vocabulary Flashcards for JLPT N3 with intuitive swipe gesture interface, audio pronunciation, search & progress tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
