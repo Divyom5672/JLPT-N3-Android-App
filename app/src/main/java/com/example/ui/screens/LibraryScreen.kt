@@ -191,8 +191,7 @@ fun LibraryCardItem(
     card: FlashcardEntity,
     onToggleBookmark: () -> Unit
 ) {
-    val category = InitialData.KANJI_CATEGORIES.find { it.id == card.categoryId }
-        ?: InitialData.VOCAB_CATEGORIES.find { it.id == card.categoryId }
+    val category = InitialData.getCategoryById(card.categoryId)
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -256,7 +255,7 @@ fun LibraryCardItem(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = category?.enName ?: "JLPT N3",
+                        text = if (category != null) "${if (card.categoryId.startsWith("v_")) "単語 Vocab" else "漢字 Kanji"} · Week ${category.weekNumber} · ${category.enName}" else "JLPT N3",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )

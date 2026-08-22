@@ -10,18 +10,10 @@ class FlashcardRepository(private val dao: FlashcardDao) {
     val allFlashcards: Flow<List<FlashcardEntity>> = dao.getAllFlashcards()
 
     suspend fun ensureDataInitialized() {
-        if (dao.getCount() == 0) {
+        if (dao.getCount() < 1900) {
+            dao.clearAll()
             dao.insertFlashcards(InitialData.INITIAL_FLASHCARDS)
-            dao.insertFlashcards(InitialData.INITIAL_VOCAB_FLASHCARDS)
-        } else {
-            // Check if vocabulary cards are seeded
-            if (dao.getFlashcardsByCategory("v_greetings").hashCode() == 0) {
-                dao.insertFlashcards(InitialData.INITIAL_VOCAB_FLASHCARDS)
-            }
         }
-        // Always clean up any duplicate entries and merge adjectives in DB
-        dao.deleteDuplicateFlashcards()
-        dao.mergeAdjectives()
     }
 
     fun getFlashcardsByCategory(categoryId: String): Flow<List<FlashcardEntity>> {

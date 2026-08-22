@@ -20,12 +20,24 @@ data class FlashcardEntity(
     val isCustom: Boolean = false
 )
 
-data class Category(
-    val id: String,
+data class WeekInfo(
+    val weekNumber: Int,
     val jpName: String,
     val enName: String,
     val description: String,
-    val glyph: String
+    val glyph: String,
+    val dayCount: Int = 7
+)
+
+data class Category(
+    val id: String,
+    val sectionType: String = "kanji", // "kanji" or "vocab"
+    val weekNumber: Int = 1,
+    val dayNumber: Int = 1,
+    val jpName: String,
+    val enName: String,
+    val description: String = "",
+    val glyph: String = ""
 )
 
 enum class FlashcardFilter {

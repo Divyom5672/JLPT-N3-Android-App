@@ -20,6 +20,10 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -37,22 +41,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.data.model.Category
 import com.example.data.model.FlashcardEntity
+import com.example.data.model.WeekInfo
 import com.example.data.seed.InitialData
 
 @Composable
-fun CategorySelectScreen(
+fun WeekSelectScreen(
     sectionType: String, // "kanji" or "vocab"
-    weekNumber: Int,
     allCards: List<FlashcardEntity>,
-    onCategorySelected: (Category) -> Unit,
-    onBackToWeeks: () -> Unit,
+    onSelectWeek: (Int) -> Unit,
+    onBackToHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val weeks = InitialData.getWeeks(sectionType)
     val isKanji = sectionType == "kanji"
-    val sectionLabel = if (isKanji) "漢字 Kanji" else "単語 Vocabulary"
-    val days = InitialData.getDaysForWeek(sectionType, weekNumber)
+    val sectionTitleJp = if (isKanji) "漢字コース" else "単語コース"
+    val sectionTitleEn = if (isKanji) "Kanji Course" else "Vocabulary Course"
+    val prefix = if (isKanji) "w" else "v_w"
 
     Box(
         modifier = modifier
@@ -81,12 +86,12 @@ fun CategorySelectScreen(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
-                        onClick = onBackToWeeks,
-                        modifier = Modifier.testTag("day_back_to_weeks")
+                        onClick = onBackToHome,
+                        modifier = Modifier.testTag("week_back_to_home")
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back to Weeks",
+                            contentDescription = "Back to Home",
                             tint = Color(0xFFE2B670)
                         )
                     }
@@ -109,7 +114,7 @@ fun CategorySelectScreen(
                     }
 
                     Text(
-                        text = "第${weekNumber}週 · Week $weekNumber",
+                        text = sectionTitleJp,
                         color = Color(0xFFFAF8F5),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
@@ -119,7 +124,7 @@ fun CategorySelectScreen(
 
                 // Breadcrumbs on top right
                 Text(
-                    text = "$sectionLabel / Week $weekNumber",
+                    text = "Home / $sectionTitleEn",
                     color = Color(0xFF808CA2),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -130,7 +135,7 @@ fun CategorySelectScreen(
 
             // Main Screen Header Title
             Text(
-                text = "Week $weekNumber Daily Sets",
+                text = "$sectionTitleEn · Weeks",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Serif,
@@ -141,7 +146,7 @@ fun CategorySelectScreen(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Select a day (Day 1 – Day 7) to study as a word list or with flashcards",
+                text = "Select a week to access its 7 daily study modules (Days 1–7)",
                 fontSize = 13.sp,
                 color = Color(0xFF939BB0),
                 textAlign = TextAlign.Center
@@ -149,7 +154,7 @@ fun CategorySelectScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Grid of Day Cards (Day 1 - Day 7)
+            // Grid of Week Cards
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 150.dp),
                 contentPadding = PaddingValues(bottom = 24.dp),
@@ -157,16 +162,22 @@ fun CategorySelectScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(days, key = { it.id }) { dayCategory ->
-                    val dayCards = allCards.filter { it.categoryId == dayCategory.id }
-                    val totalDayCount = dayCards.size
-                    val masteredCount = dayCards.count { it.status == "MASTERED" }
+                items(weeks, key = { it.weekNumber }) { week ->
+                    val weekCards = allCards.filter { 
+                        if (isKanji) {
+                            it.categoryId.startsWith("w${week.weekNumber}_")
+                        } else {
+                            it.categoryId.startsWith("v_w${week.weekNumber}_")
+                        }
+                    }
+                    val cardCount = weekCards.size
+                    val masteredCount = weekCards.count { it.status == "MASTERED" }
 
-                    DayGridCard(
-                        category = dayCategory,
-                        itemCount = totalDayCount,
+                    WeekGridCard(
+                        week = week,
+                        cardCount = cardCount,
                         masteredCount = masteredCount,
-                        onClick = { onCategorySelected(dayCategory) }
+                        onClick = { onSelectWeek(week.weekNumber) }
                     )
                 }
             }
@@ -175,9 +186,9 @@ fun CategorySelectScreen(
 }
 
 @Composable
-private fun DayGridCard(
-    category: Category,
-    itemCount: Int,
+private fun WeekGridCard(
+    week: WeekInfo,
+    cardCount: Int,
     masteredCount: Int,
     onClick: () -> Unit
 ) {
@@ -190,9 +201,9 @@ private fun DayGridCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(130.dp)
+            .aspectRatio(1.15f)
             .clickable { onClick() }
-            .testTag("day_card_${category.id}")
+            .testTag("week_card_${week.weekNumber}")
     ) {
         Box(
             modifier = Modifier
@@ -201,11 +212,11 @@ private fun DayGridCard(
         ) {
             // Large Faded Watermark Glyph on Top Right
             Text(
-                text = category.glyph,
+                text = week.glyph,
                 fontSize = 64.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Serif,
-                color = Color(0xFF334155).copy(alpha = 0.45f),
+                color = Color(0xFF334155).copy(alpha = 0.40f),
                 modifier = Modifier.align(Alignment.TopEnd)
             )
 
@@ -214,18 +225,18 @@ private fun DayGridCard(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    // Japanese Category Name
+                    // Japanese Week Title
                     Text(
-                        text = category.jpName,
-                        fontSize = 19.sp,
+                        text = week.jpName,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Serif,
                         color = Color(0xFFE2B670) // Warm Gold
                     )
 
-                    // English Category Subtitle
+                    // English Week Subtitle
                     Text(
-                        text = category.enName,
+                        text = "${week.enName} · Days 1–7",
                         fontSize = 12.sp,
                         color = Color(0xFF94A3B8),
                         fontWeight = FontWeight.Medium
@@ -237,14 +248,14 @@ private fun DayGridCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Count Pill Badge at Bottom Left
+                    // Count Pill Badge
                     Surface(
                         color = Color(0xFF0F172A),
                         shape = RoundedCornerShape(10.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155))
                     ) {
                         Text(
-                            text = "$itemCount cards",
+                            text = "$cardCount cards",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF94A3B8),

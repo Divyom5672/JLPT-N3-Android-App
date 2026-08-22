@@ -183,20 +183,21 @@ fun StatsScreen(
             )
         }
 
-        // Category Breakdown Section
+        // Kanji Curriculum Progress Section
         Text(
-            text = "Category Progress Breakdown",
+            text = "漢字 Kanji Curriculum (Weeks 1–6)",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(top = 8.dp)
         )
 
-        InitialData.CATEGORIES.forEach { category ->
-            val catCards = state.allCards.filter { it.categoryId == category.id }
-            val catTotal = catCards.size
-            val catMastered = catCards.count { it.status == "MASTERED" }
-            val fraction = if (catTotal > 0) catMastered.toFloat() / catTotal else 0f
+        InitialData.KANJI_WEEKS.forEach { week ->
+            val weekCards = state.allCards.filter { it.categoryId.startsWith("w${week.weekNumber}_") }
+            val weekTotal = weekCards.size
+            val weekMastered = weekCards.count { it.status == "MASTERED" }
+            val fraction = if (weekTotal > 0) weekMastered.toFloat() / weekTotal else 0f
+            val percent = (fraction * 100).toInt()
 
             Surface(
                 shape = RoundedCornerShape(16.dp),
@@ -217,20 +218,20 @@ fun StatsScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "${category.glyph}  ${category.jpName}",
+                                text = "${week.glyph}  ${week.jpName}",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = " (${category.enName})",
+                                text = " (${week.enName} · Days 1–7)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
                         Text(
-                            text = "$catMastered / $catTotal",
+                            text = "$weekMastered / $weekTotal ($percent%)",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -245,6 +246,77 @@ fun StatsScreen(
                             .fillMaxWidth()
                             .height(6.dp),
                         color = com.example.ui.theme.MasteredText,
+                        trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Vocabulary Curriculum Progress Section
+        Text(
+            text = "単語 Vocabulary Curriculum (Weeks 1–8)",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        InitialData.VOCAB_WEEKS.forEach { week ->
+            val weekCards = state.allCards.filter { it.categoryId.startsWith("v_w${week.weekNumber}_") }
+            val weekTotal = weekCards.size
+            val weekMastered = weekCards.count { it.status == "MASTERED" }
+            val fraction = if (weekTotal > 0) weekMastered.toFloat() / weekTotal else 0f
+            val percent = (fraction * 100).toInt()
+
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                        RoundedCornerShape(16.dp)
+                    )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "${week.glyph}  ${week.jpName}",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = " (${week.enName} · Days 1–7)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Text(
+                            text = "$weekMastered / $weekTotal ($percent%)",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    LinearProgressIndicator(
+                        progress = { fraction },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp),
+                        color = Color(0xFF38BDF8),
                         trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                     )
                 }

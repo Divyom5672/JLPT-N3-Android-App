@@ -39,6 +39,7 @@ import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LibraryScreen
 import com.example.ui.screens.SectionDetailScreen
 import com.example.ui.screens.StatsScreen
+import com.example.ui.screens.WeekSelectScreen
 import com.example.ui.theme.JLPTN3Theme
 import com.example.ui.viewmodel.FlashcardViewModel
 
@@ -60,9 +61,9 @@ fun JlptN3App(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) } // 0 = Home, 1 = Library, 2 = Stats
-    var sectionType by remember { mutableStateOf("Kanji") } // "Kanji" or "Vocabulary"
+    var selectedSection by remember { mutableStateOf<String?>(null) } // "kanji" or "vocab"
+    var selectedWeek by remember { mutableStateOf<Int?>(null) } // 1..6 or 1..8
     var activeCategory by remember { mutableStateOf<Category?>(null) }
-    var inCategorySelection by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -73,10 +74,11 @@ fun JlptN3App(
                 modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
             ) {
                 NavigationBarItem(
-                    selected = selectedTab == 0 && !inCategorySelection && activeCategory == null,
+                    selected = selectedTab == 0 && selectedSection == null && selectedWeek == null && activeCategory == null,
                     onClick = {
                         selectedTab = 0
-                        inCategorySelection = false
+                        selectedSection = null
+                        selectedWeek = null
                         activeCategory = null
                     },
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
@@ -92,8 +94,6 @@ fun JlptN3App(
                     selected = selectedTab == 1,
                     onClick = {
                         selectedTab = 1
-                        inCategorySelection = false
-                        activeCategory = null
                     },
                     icon = { Icon(Icons.Default.MenuBook, contentDescription = "Library Search") },
                     label = { Text("Library") },
@@ -108,8 +108,6 @@ fun JlptN3App(
                     selected = selectedTab == 2,
                     onClick = {
                         selectedTab = 2
-                        inCategorySelection = false
-                        activeCategory = null
                     },
                     icon = { Icon(Icons.Default.BarChart, contentDescription = "Study Progress Stats") },
                     label = { Text("Stats") },
@@ -131,6 +129,8 @@ fun JlptN3App(
             when (selectedTab) {
                 0 -> {
                     val currentCat = activeCategory
+                    val currentWeek = selectedWeek
+                    val currentSection = selectedSection
                     if (currentCat != null) {
                         SectionDetailScreen(
                             category = currentCat,
@@ -140,30 +140,37 @@ fun JlptN3App(
                                 activeCategory = null
                             }
                         )
-                    } else if (inCategorySelection) {
+                    } else if (currentSection != null && currentWeek != null) {
                         CategorySelectScreen(
-                            categories = if (sectionType == "Vocabulary") com.example.data.seed.InitialData.VOCAB_CATEGORIES else com.example.data.seed.InitialData.KANJI_CATEGORIES,
+                            sectionType = currentSection,
+                            weekNumber = currentWeek,
                             allCards = uiState.allCards,
-                            sectionType = sectionType,
                             onCategorySelected = { cat ->
                                 viewModel.selectCategory(cat.id)
                                 viewModel.randomizeDeck()
                                 activeCategory = cat
                             },
+                            onBackToWeeks = {
+                                selectedWeek = null
+                            }
+                        )
+                    } else if (currentSection != null) {
+                        WeekSelectScreen(
+                            sectionType = currentSection,
+                            allCards = uiState.allCards,
+                            onSelectWeek = { weekNum ->
+                                selectedWeek = weekNum
+                            },
                             onBackToHome = {
-                                inCategorySelection = false
+                                selectedSection = null
                             }
                         )
                     } else {
                         HomeScreen(
-                            onNavigateToKanji = {
-                                sectionType = "Kanji"
-                                inCategorySelection = true
-                                activeCategory = null
-                            },
-                            onNavigateToVocab = {
-                                sectionType = "Vocabulary"
-                                inCategorySelection = true
+                            allCards = uiState.allCards,
+                            onSelectSection = { section ->
+                                selectedSection = section
+                                selectedWeek = null
                                 activeCategory = null
                             }
                         )

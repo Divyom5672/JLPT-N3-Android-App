@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Category
 import com.example.data.model.FlashcardEntity
+import com.example.data.seed.InitialData
 import com.example.ui.components.AddCardBottomSheet
 import com.example.ui.components.SwipeableCardDeck
 import com.example.ui.viewmodel.FlashcardUiState
@@ -103,7 +104,7 @@ fun SectionDetailScreen(
                 }
 
                 Text(
-                    text = if (category.id.startsWith("v_")) "語彙の道 / ${category.jpName}" else "漢字の道 / ${category.jpName}",
+                    text = "${if (category.id.startsWith("v_")) "単語 Vocab" else "漢字 Kanji"} · 第${category.weekNumber}週 / ${category.jpName} (${category.enName})",
                     color = Color(0xFF94A3B8),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -306,7 +307,7 @@ fun SectionDetailScreen(
         // Add Custom Card BottomSheet / Dialog
         if (showAddDialog) {
             AddCardBottomSheet(
-                categories = if (category.id.startsWith("v_")) com.example.data.seed.InitialData.VOCAB_CATEGORIES else com.example.data.seed.InitialData.KANJI_CATEGORIES,
+                categories = InitialData.CATEGORIES,
                 initialCategoryId = category.id,
                 onDismiss = { showAddDialog = false },
                 onAddCard = { kanji, hiragana, meaning, selectedCatId ->

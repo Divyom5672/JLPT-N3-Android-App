@@ -26,6 +26,9 @@ interface FlashcardDao {
     @Query("DELETE FROM flashcards WHERE id NOT IN (SELECT MIN(id) FROM flashcards GROUP BY categoryId, kanji)")
     suspend fun deleteDuplicateFlashcards()
 
+    @Query("DELETE FROM flashcards")
+    suspend fun clearAll()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFlashcards(flashcards: List<FlashcardEntity>)
 
